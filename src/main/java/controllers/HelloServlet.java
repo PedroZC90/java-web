@@ -25,10 +25,10 @@ public class HelloServlet extends HttpServlet {
         List<String> cpfs = Arrays.asList("067.621.419-35", "067.621.419", "067621435");
 
         // Hello
-        HtmlUtils.build(response.getWriter(), (out) -> {
+        HtmlUtils.build(request, response, (out) -> {
             out.println("<h1>" + message + "</h1>");
             cpfs.forEach((s) -> {
-                String t = AppUtils.convertCpfToMask(s);
+                String t = AppUtils.addCpfMask(s);
                 out.println("<p>" + s + " -> " + t + "</p>");
             });
         });
