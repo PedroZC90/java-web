@@ -28,17 +28,46 @@ body {
 .centralized {
     display: grid;
     place-items: center;
+    margin-top: var(--spacing-md);
 }
 
-.centralized > form {
-    margin: 0 auto;
-    max-width: 720px;
+/*.centralized > form {*/
+/*    margin: 0 auto;*/
+/*    max-width: 80%;*/
+/*}*/
+
+/* MENU */
+ul[id='menu'] {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #333333;
+}
+
+#menu li {
+    float: left;
+}
+
+#menu li a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
+}
+
+#menu li a:hover {
+    background-color: #111111;
 }
 
 /* COSTUMER PAGE */
 #costumer-page .form-panel {
     background: white;
     border: 1px solid var(--border-color);
+    width: 75%;
+    max-width: 680px;
+    margin-top: var(--spacing-lg);
 }
 
 #costumer-page .form-header {
@@ -55,12 +84,54 @@ body {
     margin: var(--spacing-md);
 }
 
-#costumer-page .form-content .box{
+#costumer-page .form-content .box {
     display: grid;
-    grid-template-columns: 30% auto ;
+    grid-template-columns: 30% auto;
     gap: var(--spacing-md);
 }
 
 #costumer-page .form-content .box label {
     text-align: end;
+}
+
+#costumer-page .form-content .box button {
+    grid-column: 1 / span 2;
+    width: 100%;
+}
+
+/* SERVICE PAGE */
+#service-page .form-panel {
+    background: white;
+    border: 1px solid var(--border-color);
+    width: 75%;
+    max-width: 1024px;
+}
+
+#service-page .form-header {
+    background: var(--primary-color);
+    color: white;
+    margin: 0;
+    padding: var(--spacing-md);
+}
+
+#service-page .form-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+    margin: var(--spacing-md);
+}
+
+#service-page .form-content .box {
+    display: grid;
+    grid-template-columns: 30% auto;
+    gap: var(--spacing-md);
+}
+
+#service-page .form-content .box label {
+    text-align: end;
+}
+
+#service-page .form-content .box button {
+    grid-column: 1 / span 2;
+    width: 100%;
 }

@@ -106,7 +106,10 @@ public class CostumerServlet extends HttpServlet {
         final String baseUrl = AppUtils.getBaseUrl(request);
         final boolean readonly = StringUtils.isNotBlank(costumer.getCpf());
 
-        HtmlUtils.build(request, response, "costumer-page", "centralized", (out) -> {
+        HtmlUtils.build(request, response, "costumer-page", (out) -> {
+            HtmlUtils.buildMenu(request, out);
+
+            out.println("<div class='centralized'>");
             out.println("<div class='form-panel'>");
             out.println("<h1 class='form-header'>Cliente</h1>");
 
@@ -187,6 +190,7 @@ public class CostumerServlet extends HttpServlet {
             out.println("</div>");
 
             out.println("</form>");
+            out.println("</div>");
             out.println("</div>");
         });
     }
