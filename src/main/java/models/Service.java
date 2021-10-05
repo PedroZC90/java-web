@@ -8,7 +8,7 @@ public class Service {
 
     private Long id;
     private LocalDateTime createdAt;
-    private LocalDateTime schedulingDate;
+    private LocalDateTime schedulingDate = LocalDateTime.now();
     private boolean cancelled;
     private boolean completed;
 

@@ -31,10 +31,9 @@ body {
     margin-top: var(--spacing-md);
 }
 
-/*.centralized > form {*/
-/*    margin: 0 auto;*/
-/*    max-width: 80%;*/
-/*}*/
+h1.page-title {
+    margin: 0.67em;
+}
 
 /* MENU */
 ul[id='menu'] {
@@ -59,6 +58,74 @@ ul[id='menu'] {
 
 #menu li a:hover {
     background-color: #111111;
+}
+
+/* DASHBOARD */
+
+#dashboard .wrapper {
+    /*display: grid;*/
+    /*grid-template-columns: 1fr 1fr;*/
+    /*gap: var(--spacing-md);*/
+    margin: 0 auto;
+    width: 80%;
+    max-width: 1920px;
+}
+
+#dashboard .list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+}
+
+#dashboard .list-title {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-sm);
+    height: 30px;
+    max-height: 30px;
+
+    display: grid;
+    grid-template-columns: auto minmax(10px, 30px);
+}
+
+#dashboard .list-title h2 {
+    margin: 0;
+}
+
+#dashboard .list-title h2:nth-child(2) {
+    text-align: end;
+}
+
+#dashboard .list-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+    align-content: start;
+}
+
+#dashboard .list-grid a {
+    text-decoration: none;
+}
+
+#dashboard .list-grid a:visited,
+#dashboard .list-grid a:active,
+#dashboard .list-grid a:focus,
+#dashboard .list-grid a:hover {
+    color: var(--text-color);
+}
+
+#dashboard .list-box {
+    background: white;
+    border: 1px solid var(--border-color);
+}
+
+#dashboard .list-box:hover,
+#dashboard .list-box:focus {
+    border: 1px solid var(--primary-color);
+}
+
+#dashboard .list-box p {
+    margin: 4px;
 }
 
 /* COSTUMER PAGE */
@@ -100,6 +167,10 @@ ul[id='menu'] {
 }
 
 /* SERVICE PAGE */
+#service-page .centralized {
+    gap: var(--spacing-md);
+}
+
 #service-page .form-panel {
     background: white;
     border: 1px solid var(--border-color);

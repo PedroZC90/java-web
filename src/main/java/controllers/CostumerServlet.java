@@ -4,6 +4,7 @@ import models.Costumer;
 import org.apache.commons.lang3.StringUtils;
 import utils.AppUtils;
 import utils.HtmlUtils;
+import utils.ParametersUtils;
 import utils.SessionUtils;
 
 import javax.servlet.ServletException;
@@ -197,19 +198,19 @@ public class CostumerServlet extends HttpServlet {
 
     private static Costumer readForm(final HttpServletRequest request) {
         Costumer costumer = new Costumer();
-        costumer.setCpf(AppUtils.addCpfMask(request.getParameter("cpf")));
-        costumer.setName(request.getParameter("nome"));
-        costumer.setPhone(request.getParameter("phone"));
-        costumer.setEmail(request.getParameter("email"));
-        costumer.setAddress(request.getParameter("address"));
-        costumer.setNumber(request.getParameter("number"));
-        costumer.setComplement(request.getParameter("complemento"));
-        costumer.setReference(request.getParameter("referencia"));
-        costumer.setZipCode(request.getParameter("cep"));
-        costumer.setDistrict(request.getParameter("bairro"));
-        costumer.setCity(request.getParameter("cidade"));
-        costumer.setState(request.getParameter("estado"));
-        costumer.setCountry(request.getParameter("pais"));
+        costumer.setCpf(ParametersUtils.asString(request,"cpf", AppUtils::addCpfMask));
+        costumer.setName(ParametersUtils.asString(request, "nome"));
+        costumer.setPhone(ParametersUtils.asString(request, "phone"));
+        costumer.setEmail(ParametersUtils.asString(request, "email"));
+        costumer.setAddress(ParametersUtils.asString(request, "address"));
+        costumer.setNumber(ParametersUtils.asString(request, "number"));
+        costumer.setComplement(ParametersUtils.asString(request, "complemento"));
+        costumer.setReference(ParametersUtils.asString(request, "referencia"));
+        costumer.setZipCode(ParametersUtils.asString(request, "cep"));
+        costumer.setDistrict(ParametersUtils.asString(request, "bairro"));
+        costumer.setCity(ParametersUtils.asString(request, "cidade"));
+        costumer.setState(ParametersUtils.asString(request, "estado"));
+        costumer.setCountry(ParametersUtils.asString(request, "pais"));
         return costumer;
     }
 

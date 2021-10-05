@@ -4,6 +4,7 @@ import models.Service;
 import org.apache.commons.lang3.StringUtils;
 import utils.AppUtils;
 import utils.HtmlUtils;
+import utils.ParametersUtils;
 import utils.SessionUtils;
 
 import javax.servlet.ServletException;
@@ -25,9 +26,13 @@ import java.util.stream.IntStream;
 @WebServlet(name = "ServicesServlet", urlPatterns = {"/services", "/services/*"})
 public class ServicesServlet extends HttpServlet {
 
+    private static final Pattern CANCEL_REGEXP = Pattern.compile(".*/services/\\d+/cancel");
+    private static final Pattern COMPLETE_REGEXP = Pattern.compile(".*/services/\\d+/complete");
+    private static final Pattern REGEXP = Pattern.compile(".*/services/(\\d+)");
+
     @Override
     public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final Long serviceId = getQueryParameters(request);
+        final Long serviceId = getQueryParameters(request.getRequestURI());
 
         final Service service = SessionUtils.findServicesById(request.getSession(), serviceId);
         if (serviceId != null && service == null) {
@@ -43,6 +48,81 @@ public class ServicesServlet extends HttpServlet {
 
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
+        String uri= request.getRequestURI();
+        if (COMPLETE_REGEXP.matcher(uri).matches()) {
+            complete(request, response);
+        } else if (CANCEL_REGEXP.matcher(uri).matches()) {
+            cancel(request, response);
+        } else {
+            save(request, response);
+        }
+    }
+
+    protected void complete(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        final Long serviceId = getQueryParameters(request.getRequestURI());
+        if (serviceId == null) {
+            final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/dashboard");
+            response.sendRedirect(absoluteUrl);
+            return;
+        }
+
+        final HttpSession session = request.getSession();
+
+        final List<Service> services = SessionUtils.getServices(session);
+
+        int index = IntStream.range(0, services.size())
+                .filter((i) -> {
+                    Service s = services.get(i);
+                    return Objects.equals(s.getId(), serviceId);
+                })
+                .findFirst()
+                .orElse(-1);
+
+        // remove old value
+        if (index > -1) {
+            services.get(index).setCompleted(true);
+            SessionUtils.setServices(session, services);
+        } else {
+            response.setStatus(400);
+        }
+
+        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", Long.toString(serviceId));
+        response.sendRedirect(absoluteUrl);
+    }
+
+    protected void cancel(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        final Long serviceId = getQueryParameters(request.getRequestURI());
+        if (serviceId == null) {
+            final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/dashboard");
+            response.sendRedirect(absoluteUrl);
+            return;
+        }
+
+        final HttpSession session = request.getSession();
+
+        final List<Service> services = SessionUtils.getServices(session);
+
+        int index = IntStream.range(0, services.size())
+                .filter((i) -> {
+                    Service s = services.get(i);
+                    return Objects.equals(s.getId(), serviceId);
+                })
+                .findFirst()
+                .orElse(-1);
+
+        // remove old value
+        if (index > -1) {
+            services.get(index).setCancelled(true);
+            SessionUtils.setServices(session, services);
+        } else {
+            response.setStatus(400);
+        }
+
+        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", Long.toString(serviceId));
+        response.sendRedirect(absoluteUrl);
+    }
+
+    protected void save(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
         final Service service = readForm(request);
 
         final HttpSession session = request.getSession();
@@ -78,19 +158,10 @@ public class ServicesServlet extends HttpServlet {
     }
 
     // UTILITIES
-    public static Long getQueryParameters(final HttpServletRequest request) {
-        return Arrays.stream(request.getRequestURI().split("/"))
-                .map((v) -> {
-                    Matcher m = Pattern.compile("(\\d+)").matcher(v);
-                    if (m.find()) {
-                        return Long.valueOf(m.group(1));
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                //.reduce((first, second) -> second)
-                .findFirst()
-                .orElse(null);
+    public static Long getQueryParameters(final String uri) {
+        Matcher matcher = REGEXP.matcher(uri);
+        if (!matcher.find()) return null;
+        return Long.parseLong(matcher.group(1));
     }
 
     private static String input(final String tag, final String value) {
@@ -102,7 +173,7 @@ public class ServicesServlet extends HttpServlet {
     }
 
     private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final LocalDateTime dt) {
-        String s = (dt != null) ? dt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null;
+        String s = (dt != null) ? dt.minusNanos(dt.getNano()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null;
         return input(tag, type, disable, readonly, s);
     }
 
@@ -143,107 +214,138 @@ public class ServicesServlet extends HttpServlet {
         final boolean exists = (service.getId() != null);
 
         HtmlUtils.build(request, response, "service-page", (out) -> {
-            HtmlUtils.buildMenu(request, out);
+                    HtmlUtils.buildMenu(request, out);
 
-            out.println("<div class='centralized'>");
-            out.println("<div class='form-panel'>");
-            out.println("<h1 class='form-header'>Service</h1>");
+                    out.println("<div class='centralized'>");
+                    out.println("<div class='form-panel'>");
+                    out.println("<h1 class='form-header'>Service</h1>");
 
-            String form = "<form" +
-                    " class='form-content'" +
-                    " action='" + AppUtils.url(baseUrl, "/services") + "'" +
-                    " method='POST'" +
-                    ">";
-            out.println(form);
+                    String form = "<form" +
+                            " class='form-content'" +
+                            " action='" + AppUtils.url(baseUrl, "/services") + "'" +
+                            " method='POST'" +
+                            ">";
+                    out.println(form);
 
-            out.println("<div class='box'>");
-            out.println("<label for='constumer'>Cliente</label>");
-            out.println("<select id='constumer' name='constumer'>");
-            SessionUtils.getCostumers(request.getSession()).forEach((c) -> {
-                out.println("<option value='" + AppUtils.removeCpfMask(c.getCpf()) + "'>" +
-                        (c.getName() + " (" + c.getCpf() + ")") +
-                        "</option>");
-            });
-            out.println("</select>");
+                    out.println("<div class='box'>");
+                    out.println("<label for='constumer'>Cliente</label>");
+                    out.println("<select id='constumer' name='constumer'>");
+                    SessionUtils.getCostumers(request.getSession()).forEach((c) -> {
+                        out.println("<option value='" + AppUtils.removeCpfMask(c.getCpf()) + "'>" +
+                                (c.getName() + " (" + c.getCpf() + ")") +
+                                "</option>");
+                    });
+                    out.println("</select>");
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='installation'>Qtd. p/ Instalar</label>");
+                    out.println(input("installation", "number", false, false, service.getInstallations()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='copper_tube'>Comprimento de Tubo de Cobre</label>");
+                    out.println(input("copper_tube", "double", false, false, service.getTubeLength()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='removal'>Qtd. p/ Remover</label>");
+                    out.println(input("removal", "number", false, false, service.getRemoval()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='maintenance'>Qtd. p/ Manuteção</label>");
+                    out.println(input("maintenance", "number", false, false, service.getMaintenance()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='rappel'>Necessário Rapel</label>");
+                    out.println(input("rappel", "checkbox", false, false, service.isRappelRequired()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='scheduler'>Agendamento</label>");
+                    out.println(input("scheduler", "datetime-local", false, false, service.getSchedulingDate()));
+                    out.println("</div>");
+
+                    if (service.getCreatedAt() != null) {
+                        out.println("<div class='box'>");
+                        out.println("<label for='date'>Criação</label>");
+                        out.println(input("created_at", "datetime-local", false, true, service.getCreatedAt()));
+                        out.println("</div>");
+                    }
+
+                    out.println("<div class='box'>");
+                    out.println("<label for='cost'>Valor</label>");
+                    out.println(input("cost", "text", true, false, service.getValue()));
+                    out.println("</div>");
+
+                    out.println("<div class='box'>");
+                    out.println("<button type='submit'>Salvar</button>");
+                    out.println("</div>");
+
+                    out.println("</form>");
+                    out.println("</div>");
+
+                    // CANCEL
+                    if (exists) {
+                    out.println("<div class='form-panel'>");
+                    out.println("<h1 class='form-header'>Cancelar</h1>");
+
+                        String cancelForm = "<form" +
+                                " class='form-content'" +
+                                " action='" + AppUtils.url(baseUrl, "/services", service.getId().toString(), "/cancel") + "'" +
+                                " method='POST'" +
+                                ">";
+                        out.println(cancelForm);
+
+                        out.println("<button type='submit' value='cancel'>Submit</button>");
+
+                        out.println("</form>");
+                    out.println("</div>");
+
+                    // COMPLETE
+                    out.println("<div class='form-panel'>");
+                    out.println("<h1 class='form-header'>Concluir</h1>");
+
+                    String completeForm = "<form" +
+                            " class='form-content'" +
+                            " action='" + AppUtils.url(baseUrl, "/services", service.getId().toString(), "/complete") + "'" +
+                            " method='POST'" +
+                            ">";
+                    out.println(completeForm);
+
+                    out.println("<button type='submit' value='complete'>Submit</button>");
+
+                    out.println("</form>");
+                    out.println("</div>");
+                }
+
             out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='installation'>Qtd. p/ Instalar</label>");
-            out.println(input("installation", "number", false, false, service.getInstallations()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='copper_tube'>Comprimento de Tubo de Cobre</label>");
-            out.println(input("copper_tube", "double", false, false, service.getTubeLength()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='removal'>Qtd. p/ Remover</label>");
-            out.println(input("removal", "number", false, false, service.getRemoval()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='maintenance'>Qtd. p/ Manuteção</label>");
-            out.println(input("maintenance", "number", false, false, service.getMaintenance()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='rappel'>Necessário Rapel</label>");
-            out.println(input("rappel", "checkbox", false, false, service.isRappelRequired()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='date'>Agendamento</label>");
-            out.println(input("date", "datetime-local", false, false, service.getSchedulingDate()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<label for='cost'>Valor</label>");
-            out.println(input("cost", "text", true, false, service.getValue()));
-            out.println("</div>");
-
-            out.println("<div class='box'>");
-            out.println("<button type='submit'>Salvar</button>");
-            out.println("</div>");
-
-            out.println("</form>");
-            out.println("</div>");
-            out.println("</div>");
-
-            if (exists) {
-                String form2 = "<form" +
-                        " class='form-content'" +
-                        " action='" + AppUtils.url(baseUrl, "/services", service.getId().toString(), "cancel") + "'" +
-                        " method='POST'" +
-                        ">";
-                out.println(form2);
-
-                out.println("<button type='submit' value='cancel'>Cancel</button>");
-
-                out.println("</form>");
-            }
         });
     }
 
     private static Service readForm(final HttpServletRequest request) {
-        Long serviceId = getQueryParameters(request);
+        LocalDateTime created_at = ParametersUtils.asLocalDateTime(request, "created_at");
+
+        Long serviceId = getQueryParameters(request.getRequestURI());
         if (serviceId == null) {
             final HttpSession session = request.getSession();
             serviceId = SessionUtils.getServiceSequence(session);
             SessionUtils.setServiceSequence(session, serviceId++);
+            created_at = LocalDateTime.now();
         }
 
         Service service = new Service();
         service.setId(serviceId);
-        service.setCostumerCpf(AppUtils.addCpfMask(request.getParameter("costumer")));
-        service.setInstallations(Integer.parseInt(request.getParameter("installation")));
-        service.setTubeLength(Double.parseDouble(request.getParameter("copper_tube")));
-        service.setRemoval(Integer.parseInt(request.getParameter("removal")));
-        service.setMaintenance(Integer.parseInt(request.getParameter("maintenance")));
-        service.setRappelRequired(Boolean.parseBoolean(request.getParameter("rappel")));
-        service.setSchedulingDate(LocalDateTime.parse(request.getParameter("date")));
-
-        // service.setCreatedAt();
+        service.setCostumerCpf(ParametersUtils.asString(request, "costumer", AppUtils::addCpfMask));
+        service.setInstallations(ParametersUtils.asInteger(request, "installation"));
+        service.setTubeLength(ParametersUtils.asDouble(request, "copper_tube"));
+        service.setRemoval(ParametersUtils.asInteger(request, "removal"));
+        service.setMaintenance(ParametersUtils.asInteger(request, "maintenance"));
+        service.setRappelRequired(ParametersUtils.asBoolean(request, "rappel"));
+        service.setSchedulingDate(ParametersUtils.asLocalDateTime(request, "scheduler"));
+        service.setCreatedAt(created_at);
         // service.setCancelled();
         // service.setCompleted();
 

@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebServlet(name = "DashboardServlet", value = "/dashboard")
@@ -27,32 +28,6 @@ public class DashboardServlet extends HttpServlet {
 
         final List<Costumer> costumers = SessionUtils.getCostumers(session);
 
-        // DEVELOPMENT
-        if (costumers.size() == 0) {
-            Costumer c1 = new Costumer();
-            c1.setCpf("067.621.419-35");
-            c1.setName("Pedro");
-            c1.setZipCode("88811-510");
-            c1.setDistrict("Pio Correa");
-            c1.setCity("CRICIUMA");
-            c1.setState("SANTA CATARINA");
-            c1.setCountry("BRASIL");
-
-            Costumer c2 = new Costumer();
-            c2.setCpf("000.000.000-01");
-            c2.setName("Suzana");
-            c2.setZipCode("88811-510");
-            c2.setDistrict("Pio Correa");
-            c2.setCity("CRICIUMA");
-            c2.setState("SANTA CATARINA");
-            c2.setCountry("BRASIL");
-
-            costumers.add(c1);
-            costumers.add(c2);
-
-            SessionUtils.setCostumers(session, costumers);
-        }
-
         final int numberOfCostumers = costumers.size();
 
         final List<Service> services = SessionUtils.getServices(session);
@@ -62,39 +37,48 @@ public class DashboardServlet extends HttpServlet {
 
         // build html page
         response.setContentType("text/html");
-        HtmlUtils.build(request, response, (out) -> {
+        HtmlUtils.build(request, response, "dashboard", (out) -> {
             HtmlUtils.buildMenu(request, out);
 
-            out.println("<h1>" + "DASHBOARD" + "</h1>");
-            out.println("<p>Number Of Costumers:" + numberOfCostumers + "</p>");
-            out.println("<p>Number Of Services:" + numberOfServices + "</p>");
+            out.println("<h1 class='page-title'>DASHBOARD</h1>");
 
             out.println("<div class='wrapper'>");
 
             // costumers
-            out.println("<div>");
-            out.println("<ul>");
+            out.println("<div id='costumers' class='list'>");
+            out.println("<div class='list-title'>");
+            out.println("<h2>Clientes</h2>");
+            out.println("<h2>" + numberOfCostumers + "</h2>");
+            out.println("</div>");
+            out.println("<div class='list-grid'>");
             costumers.forEach((c) -> {
-                out.println("<li>");
-                out.println("<a href='" + AppUtils.url(baseUrl, "/costumers", AppUtils.removeCpfMask(c.getCpf())) + "'>");
-                out.println(c.getCpf() + " - " + c.getName());
+                final String link = AppUtils.url(baseUrl, "/costumers", AppUtils.removeCpfMask(c.getCpf()));
+                out.println("<a class='list-box' href='" + link + "'>");
+                out.println("<p>Nome: " + c.getName() + "</p>");
+                out.println("<p>CPF: " + c.getCpf() + "</p>");
+                out.println("<p>Address : " + c.getAddress() + ", N " + c.getNumber() + ", " + c.getComplement() + ", " + c.getDistrict() + ", " + c.getCity() + "</p>");
                 out.println("</a>");
-                out.println("</li>");
             });
-            out.println("</ul>");
+            out.println("</div>");
             out.println("</div>");
 
             // services
-            out.println("<div>");
-            out.println("<ul>");
-            services.forEach((s) -> {
-                out.println("<li>");
-                out.println("<a href='" + AppUtils.url(baseUrl, "/services", s.getId().toString()) + "'>");
-                out.println(s.getId());
-                out.println("</a>");
-                out.println("</li>");
-            });
-            out.println("</ul>");
+            out.println("<div id='services' class='list'>");
+            out.println("<div class='list-title'>");
+            out.println("<h2>Serviços</h2>");
+            out.println("<h2>" + numberOfServices + "</h2>");
+            out.println("</div>");
+            out.println("<div class='list-grid'>");
+            services.stream()
+                    .filter((s) -> !s.isCancelled())
+                    .forEach((s) -> {
+                        final String link = AppUtils.url(baseUrl, "/services", s.getId().toString());
+                        out.println("<a class='list-box' href='" + link + "'>");
+                        out.println("<p>Service #" + s.getId() + "</p>");
+                        out.println("<p>" + s.getSchedulingDate().format(DateTimeFormatter.ISO_ZONED_DATE_TIME) + "</p>");
+                        out.println("</a>");
+                    });
+            out.println("</div>");
             out.println("</div>");
 
             out.println("</div>");
