@@ -6,7 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="description" content="A simple HTML5 Template for new projects.">
         <meta name="author" content="Hello World">
-        <meta http-equiv="refresh" content="0; URL='/java_web_war_exploded/dashboard'" />
+        <meta http-equiv="refresh" content="0; URL='<%= request.getContextPath() %>/dashboard'" />
         <title>Hello World</title>
         <%--<link rel="icon" href="/favicon.ico">--%>
         <%--<link rel="icon" href="/favicon.svg" type="image/svg+xml">--%>
