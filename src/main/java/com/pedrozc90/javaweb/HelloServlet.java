@@ -1,6 +1,7 @@
 package com.pedrozc90.javaweb;
 
 import java.io.*;
+import java.sql.Connection;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 
@@ -14,6 +15,10 @@ public class HelloServlet extends HttpServlet {
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
+
+        Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
+        TestDAO.select(db);
+        TestDAO.inser(db, "bbbbbbbbb");
 
         // Hello
         PrintWriter out = response.getWriter();

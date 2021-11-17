@@ -14,9 +14,6 @@
         <element id="directory" name="classes">
           <element id="module-output" name="java-web" />
         </element>
-        <element id="directory" name="lib">
-          <element id="library" level="project" name="Maven: org.apache.commons:commons-lang3:3.12.0" />
-        </element>
       </element>
       <element id="directory" name="META-INF">
         <element id="file-copy" path="$PROJECT_DIR$/target/java-web-1.0-SNAPSHOT/META-INF/MANIFEST.MF" />
