@@ -1,5 +1,7 @@
 package models;
 
+import database.CostumerDAO;
+
 public class Costumer {
 
     // info
@@ -121,6 +123,23 @@ public class Costumer {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public Costumer merge(final Costumer c) {
+        this.setCpf(c.getCpf());
+        this.setName(c.getName());
+        this.setPhone(c.getPhone());
+        this.setEmail(c.getEmail());
+        this.setAddress(c.getAddress());
+        this.setNumber(c.getNumber());
+        this.setComplement(c.getComplement());
+        this.setReference(c.getReference());
+        this.setZipCode(c.getZipCode());
+        this.setDistrict(c.getDistrict());
+        this.setCity(c.getCity());
+        this.setState(c.getState());
+        this.setCountry(c.getCountry());
+        return this;
     }
 
 }

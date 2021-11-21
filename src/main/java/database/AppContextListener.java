@@ -1,4 +1,6 @@
-package com.pedrozc90.javaweb;
+package database;
+
+import utils.AppUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;

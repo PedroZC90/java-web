@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 public class AppUtils {
 
+    public static final String CONNECTION_KEY = "db_connection";
+
     // CPF
     public static String removeCpfMask(final String cnpj) {
         if (StringUtils.isBlank(cnpj)) return null;

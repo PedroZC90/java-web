@@ -1,5 +1,6 @@
 package controllers;
 
+import database.ServiceDAO;
 import models.Service;
 import org.apache.commons.lang3.StringUtils;
 import utils.AppUtils;
@@ -14,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -23,28 +25,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
-@WebServlet(name = "ServicesServlet", urlPatterns = {"/services", "/services/*"})
+@WebServlet(name = "ServicesServlet", urlPatterns = {"/servlet/services", "/servlet/services/*"})
 public class ServicesServlet extends HttpServlet {
 
     private static final Pattern CANCEL_REGEXP = Pattern.compile(".*/services/\\d+/cancel");
     private static final Pattern COMPLETE_REGEXP = Pattern.compile(".*/services/\\d+/complete");
     private static final Pattern REGEXP = Pattern.compile(".*/services/(\\d+)");
 
-    @Override
-    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final Long serviceId = getQueryParameters(request.getRequestURI());
-
-        final Service service = SessionUtils.findServicesById(request.getSession(), serviceId);
-        if (serviceId != null && service == null) {
-            response.setStatus(400);
-            response.sendRedirect(request.getContextPath());
-            return;
-        }
-
-        response.setContentType("text/html");
-
-        form(request, response, (service != null) ? service : new Service());
-    }
+//    @Override
+//    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+//        final Long serviceId = getQueryParameters(request.getRequestURI());
+//
+//        final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
+//
+//        final Service service = ServiceDAO.findById(db, serviceId);
+//        if (serviceId != null && service == null) {
+//            response.setStatus(400);
+//            response.sendRedirect(request.getContextPath());
+//            return;
+//        }
+//
+//        response.setContentType("text/html");
+//
+//        form(request, response, (service != null) ? service : new Service());
+//    }
 
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {

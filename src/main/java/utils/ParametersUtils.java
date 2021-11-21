@@ -31,6 +31,14 @@ public class ParametersUtils {
         return Double.parseDouble(asString(request, key));
     }
 
+    public static Long asLong(final HttpServletRequest request, final String key) {
+        try {
+            return Long.parseLong(asString(request, key));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
     public static String asString(final HttpServletRequest request, final String key) {
         return request.getParameter(key);
     }

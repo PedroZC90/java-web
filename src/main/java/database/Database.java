@@ -1,4 +1,4 @@
-package com.pedrozc90.javaweb;
+package database;
 
 import org.postgresql.Driver;
 
@@ -59,7 +59,7 @@ public class Database {
         }
     }
 
-    /* getStatus -- check if link is connected. */
+    /* isConnected -- check if link is connected. */
     public boolean isConnected() {
         return (connection != null);
     }
