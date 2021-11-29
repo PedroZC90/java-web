@@ -7,12 +7,14 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
     final String base_url = AppUtils.getBaseUrl(request);
-    final String cpf = ParametersUtils.asString(request, "cpf");
+    final Long id = ParametersUtils.asLong(request, "id");
 
     final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
 
-    Costumer costumer = CostumerDAO.findByCpf(db, cpf);
-    if (cpf == null) costumer = new Costumer();
+    Costumer costumer = CostumerDAO.findById(db, id);
+    if (costumer == null) {
+        costumer = new Costumer();
+    }
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,14 +36,14 @@
         <div class="centralized">
             <div class="form-panel">
                 <h1 class="form-header">Cliente</h1>
-                <form class="form-content" action="<%= base_url %>/servlet/costumers/create" method="POST">
+                <form class="form-content" action="<%= base_url %>/servlet/costumers/create<%= (id != null) ? "?id=" + id : "" %>" method="POST">
                     <div class="box">
                         <label for="cpf">CPF</label>
-                        <input id="cpf" name="cpf" type="text" readonly="<%= StringUtils.isNotBlank(costumer.getCpf()) %>" value="<%= (StringUtils.isNotBlank(costumer.getCpf())) ? costumer.getCpf() : "" %>">
+                        <input id="cpf" name="cpf" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCpf())) ? costumer.getCpf() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="nome">Nome</label>
-                        <input id="nome" name="nome" type="text" value="<%= (StringUtils.isNotBlank(costumer.getName())) ? costumer.getName() : "" %>">
+                        <label for="name">Nome</label>
+                        <input id="name" name="name" type="text" value="<%= (StringUtils.isNotBlank(costumer.getName())) ? costumer.getName() : "" %>">
                     </div>
                     <div class="box">
                         <label for="phone">Telefone</label>
@@ -56,36 +58,36 @@
                         <input id="address" name="address" type="text" value="<%= (StringUtils.isNotBlank(costumer.getAddress())) ? costumer.getAddress() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="numero">Número</label>
-                        <input id="numero" name="numero" type="text" value="<%= (StringUtils.isNotBlank(costumer.getNumber())) ? costumer.getNumber() : "" %>">
+                        <label for="number">Número</label>
+                        <input id="number" name="number" type="text" value="<%= (StringUtils.isNotBlank(costumer.getNumber())) ? costumer.getNumber() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="complemento">Complemento</label>
-                        <input id="complemento" name="complemento" type="text" value="<%= (StringUtils.isNotBlank(costumer.getComplement())) ? costumer.getComplement() : "" %>">
+                        <label for="complement">Complemento</label>
+                        <input id="complement" name="complement" type="text" value="<%= (StringUtils.isNotBlank(costumer.getComplement())) ? costumer.getComplement() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="referencia">Referência</label>
-                        <input id="referencia" name="referencia" type="text" value="<%= (StringUtils.isNotBlank(costumer.getReference())) ? costumer.getReference() : "" %>">
+                        <label for="reference">Referência</label>
+                        <input id="reference" name="reference" type="text" value="<%= (StringUtils.isNotBlank(costumer.getReference())) ? costumer.getReference() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="cep">CEP</label>
-                        <input id="cep" name="cep" type="text" value="<%= (StringUtils.isNotBlank(costumer.getZipCode())) ? costumer.getZipCode() : "" %>">
+                        <label for="zip_code">CEP</label>
+                        <input id="zip_code" name="zip_code" type="text" value="<%= (StringUtils.isNotBlank(costumer.getZipCode())) ? costumer.getZipCode() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="bairro">Bairro</label>
-                        <input id="bairro" name="bairro" type="text" value="<%= (StringUtils.isNotBlank(costumer.getDistrict())) ? costumer.getDistrict() : "" %>">
+                        <label for="district">Bairro</label>
+                        <input id="district" name="district" type="text" value="<%= (StringUtils.isNotBlank(costumer.getDistrict())) ? costumer.getDistrict() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="cidade">Cidade</label>
-                        <input id="cidade" name="cidade" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCity())) ? costumer.getCity() : "" %>">
+                        <label for="city">Cidade</label>
+                        <input id="city" name="city" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCity())) ? costumer.getCity() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="estado">Estado</label>
-                        <input id="estado" name="estado" type="text" value="<%= (StringUtils.isNotBlank(costumer.getState())) ? costumer.getState() : "" %>">
+                        <label for="state">Estado</label>
+                        <input id="state" name="state" type="text" value="<%= (StringUtils.isNotBlank(costumer.getState())) ? costumer.getState() : "" %>">
                     </div>
                     <div class="box">
-                        <label for="pais">País</label>
-                        <input id="pais" name="pais" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCountry())) ? costumer.getCountry() : "" %>">
+                        <label for="country">País</label>
+                        <input id="country" name="country" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCountry())) ? costumer.getCountry() : "" %>">
                     </div>
                     <div class="box">
                         <button type="submit">Salvar</button>

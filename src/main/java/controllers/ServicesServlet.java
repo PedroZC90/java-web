@@ -1,160 +1,132 @@
 package controllers;
 
+import database.CostumerDAO;
 import database.ServiceDAO;
+import models.Costumer;
 import models.Service;
-import org.apache.commons.lang3.StringUtils;
 import utils.AppUtils;
-import utils.HtmlUtils;
 import utils.ParametersUtils;
-import utils.SessionUtils;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.sql.Connection;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 
 @WebServlet(name = "ServicesServlet", urlPatterns = {"/servlet/services", "/servlet/services/*"})
 public class ServicesServlet extends HttpServlet {
+
+    private static final Logger LOGGER = Logger.getLogger(ServicesServlet.class.getSimpleName());
 
     private static final Pattern CANCEL_REGEXP = Pattern.compile(".*/services/\\d+/cancel");
     private static final Pattern COMPLETE_REGEXP = Pattern.compile(".*/services/\\d+/complete");
     private static final Pattern REGEXP = Pattern.compile(".*/services/(\\d+)");
 
-//    @Override
-//    public void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-//        final Long serviceId = getQueryParameters(request.getRequestURI());
-//
-//        final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
-//
-//        final Service service = ServiceDAO.findById(db, serviceId);
-//        if (serviceId != null && service == null) {
-//            response.setStatus(400);
-//            response.sendRedirect(request.getContextPath());
-//            return;
-//        }
-//
-//        response.setContentType("text/html");
-//
-//        form(request, response, (service != null) ? service : new Service());
-//    }
-
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        String uri= request.getRequestURI();
-        if (COMPLETE_REGEXP.matcher(uri).matches()) {
-            complete(request, response);
-        } else if (CANCEL_REGEXP.matcher(uri).matches()) {
-            cancel(request, response);
-        } else {
-            save(request, response);
-        }
-    }
+        final String action = ParametersUtils.asString(request, "action");
+        final Long serviceId = getQueryParameters(request);
 
-    protected void complete(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final Long serviceId = getQueryParameters(request.getRequestURI());
-        if (serviceId == null) {
-            final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/dashboard");
-            response.sendRedirect(absoluteUrl);
+        //String uri= request.getRequestURI();
+        //if (COMPLETE_REGEXP.matcher(uri).matches()) {
+        //    complete(request, response);
+        //} else if (CANCEL_REGEXP.matcher(uri).matches()) {
+        //    cancel(request, response);
+        //} else {
+        //    save(request, response);
+        //}
+        if (action == null) {
+            response.setStatus(400);
             return;
         }
 
-        final HttpSession session = request.getSession();
-
-        final List<Service> services = SessionUtils.getServices(session);
-
-        int index = IntStream.range(0, services.size())
-                .filter((i) -> {
-                    Service s = services.get(i);
-                    return Objects.equals(s.getId(), serviceId);
-                })
-                .findFirst()
-                .orElse(-1);
-
-        // remove old value
-        if (index > -1) {
-            services.get(index).setCompleted(true);
-            SessionUtils.setServices(session, services);
-        } else {
-            response.setStatus(400);
+        switch (action) {
+            case "save":
+                save(request, response, serviceId);
+                break;
+            case "complete":
+                complete(request, response, serviceId);
+                break;
+            case "cancel":
+                cancel(request, response, serviceId);
+                break;
+            default:
+                LOGGER.severe("Unknown action '" + action + "'");
         }
 
-        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", Long.toString(serviceId));
+//        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services/index.jsp?id=" + serviceId);
+//        response.sendRedirect(absoluteUrl);
+    }
+
+    private void dashboard(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/dashboard/index.jsp");
         response.sendRedirect(absoluteUrl);
     }
 
-    protected void cancel(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final Long serviceId = getQueryParameters(request.getRequestURI());
-        if (serviceId == null) {
-            final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/dashboard");
-            response.sendRedirect(absoluteUrl);
+    private void redirect(final HttpServletRequest request, final HttpServletResponse response, final Long serviceId) throws IOException {
+        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services/index.jsp?id=" + serviceId);
+        response.sendRedirect(absoluteUrl);
+    }
+
+    protected void complete(final HttpServletRequest request, final HttpServletResponse response, final Long serviceId) throws IOException {
+        final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
+
+        final Service service = ServiceDAO.findById(db, serviceId);
+        if (service == null) {
+            response.setStatus(400);
             return;
         }
 
-        final HttpSession session = request.getSession();
-
-        final List<Service> services = SessionUtils.getServices(session);
-
-        int index = IntStream.range(0, services.size())
-                .filter((i) -> {
-                    Service s = services.get(i);
-                    return Objects.equals(s.getId(), serviceId);
-                })
-                .findFirst()
-                .orElse(-1);
-
-        // remove old value
-        if (index > -1) {
-            services.get(index).setCancelled(true);
-            SessionUtils.setServices(session, services);
-        } else {
-            response.setStatus(400);
+        boolean success = ServiceDAO.complete(db, service.getId());
+        if (success) {
+            dashboard(request, response);
         }
-
-        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", Long.toString(serviceId));
-        response.sendRedirect(absoluteUrl);
     }
 
-    protected void save(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final Service service = readForm(request);
+    protected void cancel(final HttpServletRequest request, final HttpServletResponse response, final Long serviceId) throws IOException {
+        final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
 
-        final HttpSession session = request.getSession();
-
-        final List<Service> services = SessionUtils.getServices(session);
-
-        int index = IntStream.range(0, services.size())
-                .filter((i) -> {
-                    Service s = services.get(i);
-                    return Objects.equals(s.getId(), service.getId());
-                }).findFirst()
-                .orElse(-1);
-
-        // remove old value
-        if (index > -1) {
-            services.remove(index);
-        } else {
-            final Long sequence = SessionUtils.getServiceSequence(session);
-            service.setId(sequence);
+        final Service service = ServiceDAO.findById(db, serviceId);
+        if (service == null) {
+            response.setStatus(400);
+            return;
         }
 
-        // insert updated value
-        services.add(service);
+        boolean success = ServiceDAO.cancel(db, service.getId());
+        if (success) {
+            dashboard(request, response);
+        }
+    }
 
-        SessionUtils.setServices(session, services);
+    protected void save(final HttpServletRequest request, final HttpServletResponse response, final Long serviceId) throws IOException {
+        final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
 
-        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", service.getId().toString());
-        response.sendRedirect(absoluteUrl);
+        Service service = ServiceDAO.findById(db, serviceId);
+        if (service == null) {
+            service = readForm(request);
+            service = ServiceDAO.insert(db, service);
+            if (service == null) {
+                response.setStatus(400);
+                return;
+            }
+        } else {
+            merge(request, service);
+            boolean success = ServiceDAO.update(db, service);
+            if (!success) {
+                response.setStatus(400);
+                return;
+            }
+        }
+
+        // final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/services", service.getId().toString());
+        // response.sendRedirect(absoluteUrl);
+        redirect(request, response, service.getId());
     }
 
     public void destroy() {
@@ -162,197 +134,74 @@ public class ServicesServlet extends HttpServlet {
     }
 
     // UTILITIES
+    public static Long getQueryParameters(final HttpServletRequest request) {
+        return getQueryParameters(request.getRequestURL().toString());
+    }
+
     public static Long getQueryParameters(final String uri) {
         Matcher matcher = REGEXP.matcher(uri);
         if (!matcher.find()) return null;
         return Long.parseLong(matcher.group(1));
     }
 
-    private static String input(final String tag, final String value) {
-        return input(tag, "text", value);
-    }
-
-    private static String input(final String tag, final String type, final String value) {
-        return input(tag, type, false, false, value);
-    }
-
-    private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final LocalDateTime dt) {
-        String s = (dt != null) ? dt.minusNanos(dt.getNano()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : null;
-        return input(tag, type, disable, readonly, s);
-    }
-
-    private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final Integer value) {
-        String s = (value != null) ? Integer.toString(value) : "0";
-        return input(tag, type, disable, readonly, s);
-    }
-
-    private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final Double value) {
-        String s = (value != null) ? Double.toString(value) : "0.0";
-        return input(tag, type, disable, readonly, s);
-    }
-
-    private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final boolean value) {
-        return input(tag, type, disable, readonly, Boolean.toString(value));
-    }
-
-    private static String input(final String tag, final String type, final boolean disable, final boolean readonly, final String value) {
-        StringBuilder sb = new StringBuilder("<input ")
-                .append(" id='").append(tag).append("'")
-                .append(" name='").append(tag).append("'");
-        if (StringUtils.equals(type, "datetime-local")) {
-            sb.append(" type='").append(type).append("'")
-                    .append(" step='1'");
-        } else if (StringUtils.equals(type, "double")) {
-                sb.append(" type='number'").append(" step='0.01'");
-        } else {
-                sb.append(" type='").append(type).append("'");
-        }
-        if (disable) sb.append(" disabled='true'");
-        if (readonly) sb.append(" readonly");
-        if (StringUtils.isNotBlank(value)) sb.append(" value='").append(value).append("'");
-        return sb.append(" />").toString();
-    }
-
-    private static void form(final HttpServletRequest request, final HttpServletResponse response, final Service service) throws IOException {
-        final String baseUrl = AppUtils.getBaseUrl(request);
-        final boolean exists = (service.getId() != null);
-
-        HtmlUtils.build(request, response, "service-page", (out) -> {
-                    HtmlUtils.buildMenu(request, out);
-
-                    out.println("<div class='centralized'>");
-                    out.println("<div class='form-panel'>");
-                    out.println("<h1 class='form-header'>Service</h1>");
-
-                    String form = "<form" +
-                            " class='form-content'" +
-                            " action='" + AppUtils.url(baseUrl, "/services") + "'" +
-                            " method='POST'" +
-                            ">";
-                    out.println(form);
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='constumer'>Cliente</label>");
-                    out.println("<select id='constumer' name='constumer'>");
-                    SessionUtils.getCostumers(request.getSession()).forEach((c) -> {
-                        out.println("<option value='" + AppUtils.removeCpfMask(c.getCpf()) + "'>" +
-                                (c.getName() + " (" + c.getCpf() + ")") +
-                                "</option>");
-                    });
-                    out.println("</select>");
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='installation'>Qtd. p/ Instalar</label>");
-                    out.println(input("installation", "number", false, false, service.getInstallations()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='copper_tube'>Comprimento de Tubo de Cobre</label>");
-                    out.println(input("copper_tube", "double", false, false, service.getTubeLength()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='removal'>Qtd. p/ Remover</label>");
-                    out.println(input("removal", "number", false, false, service.getRemoval()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='maintenance'>Qtd. p/ Manuteção</label>");
-                    out.println(input("maintenance", "number", false, false, service.getMaintenance()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='rappel'>Necessário Rapel</label>");
-                    out.println(input("rappel", "checkbox", false, false, service.isRappelRequired()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='scheduler'>Agendamento</label>");
-                    out.println(input("scheduler", "datetime-local", false, false, service.getSchedulingDate()));
-                    out.println("</div>");
-
-                    if (service.getCreatedAt() != null) {
-                        out.println("<div class='box'>");
-                        out.println("<label for='date'>Criação</label>");
-                        out.println(input("created_at", "datetime-local", false, true, service.getCreatedAt()));
-                        out.println("</div>");
-                    }
-
-                    out.println("<div class='box'>");
-                    out.println("<label for='cost'>Valor</label>");
-                    out.println(input("cost", "text", true, false, service.getValue()));
-                    out.println("</div>");
-
-                    out.println("<div class='box'>");
-                    out.println("<button type='submit'>Salvar</button>");
-                    out.println("</div>");
-
-                    out.println("</form>");
-                    out.println("</div>");
-
-                    // CANCEL
-                    if (exists) {
-                    out.println("<div class='form-panel'>");
-                    out.println("<h1 class='form-header'>Cancelar</h1>");
-
-                        String cancelForm = "<form" +
-                                " class='form-content'" +
-                                " action='" + AppUtils.url(baseUrl, "/services", service.getId().toString(), "/cancel") + "'" +
-                                " method='POST'" +
-                                ">";
-                        out.println(cancelForm);
-
-                        out.println("<button type='submit' value='cancel'>Submit</button>");
-
-                        out.println("</form>");
-                    out.println("</div>");
-
-                    // COMPLETE
-                    out.println("<div class='form-panel'>");
-                    out.println("<h1 class='form-header'>Concluir</h1>");
-
-                    String completeForm = "<form" +
-                            " class='form-content'" +
-                            " action='" + AppUtils.url(baseUrl, "/services", service.getId().toString(), "/complete") + "'" +
-                            " method='POST'" +
-                            ">";
-                    out.println(completeForm);
-
-                    out.println("<button type='submit' value='complete'>Submit</button>");
-
-                    out.println("</form>");
-                    out.println("</div>");
-                }
-
-            out.println("</div>");
-        });
-    }
-
     private static Service readForm(final HttpServletRequest request) {
-        LocalDateTime created_at = ParametersUtils.asLocalDateTime(request, "created_at");
+        Service s = new Service();
+        s.setCostumerId(ParametersUtils.asLong(request, "costumer"));
+        s.setInstallations(ParametersUtils.asInteger(request, "installation"));
+        s.setTubeLength(ParametersUtils.asDouble(request, "copper_tube"));
+        s.setRemoval(ParametersUtils.asInteger(request, "removal"));
+        s.setMaintenance(ParametersUtils.asInteger(request, "maintenance"));
+        s.setRappelRequired(ParametersUtils.asBoolean(request, "rappel"));
+        s.setScheduledTo(ParametersUtils.asLocalDateTime(request, "scheduled_to"));
 
-        Long serviceId = getQueryParameters(request.getRequestURI());
-        if (serviceId == null) {
-            final HttpSession session = request.getSession();
-            serviceId = SessionUtils.getServiceSequence(session);
-            SessionUtils.setServiceSequence(session, serviceId++);
-            created_at = LocalDateTime.now();
+        LocalDateTime created_at = ParametersUtils.asLocalDateTime(request, "created_at");
+        s.setCreatedAt((created_at != null) ? created_at : LocalDateTime.now());
+
+        double value = calculateValue(s);
+        s.setValue(value);
+
+        return s;
+    }
+
+    private static Service merge(final HttpServletRequest request, final Service s) {
+        if (ParametersUtils.has(request, "installation")) {
+            s.setInstallations(ParametersUtils.asInteger(request, "installation"));
+        }
+        if (ParametersUtils.has(request, "copper_tube")) {
+            s.setTubeLength(ParametersUtils.asDouble(request, "copper_tube"));
+        }
+        if (ParametersUtils.has(request, "removal")) {
+            s.setRemoval(ParametersUtils.asInteger(request, "removal"));
+        }
+        if (ParametersUtils.has(request, "maintenance")) {
+            s.setMaintenance(ParametersUtils.asInteger(request, "maintenance"));
+        }
+        if (ParametersUtils.has(request, "rappel")) {
+            s.setRappelRequired(ParametersUtils.asBoolean(request, "rappel"));
+        }
+        if (ParametersUtils.has(request, "scheduled_to")) {
+            s.setScheduledTo(ParametersUtils.asLocalDateTime(request, "scheduled_to"));
+        }
+        if (ParametersUtils.has(request, "created_at")) {
+            s.setCreatedAt(ParametersUtils.asLocalDateTime(request, "created_at"));
         }
 
-        Service service = new Service();
-        service.setId(serviceId);
-        service.setCostumerCpf(ParametersUtils.asString(request, "costumer", AppUtils::addCpfMask));
-        service.setInstallations(ParametersUtils.asInteger(request, "installation"));
-        service.setTubeLength(ParametersUtils.asDouble(request, "copper_tube"));
-        service.setRemoval(ParametersUtils.asInteger(request, "removal"));
-        service.setMaintenance(ParametersUtils.asInteger(request, "maintenance"));
-        service.setRappelRequired(ParametersUtils.asBoolean(request, "rappel"));
-        service.setSchedulingDate(ParametersUtils.asLocalDateTime(request, "scheduler"));
-        service.setCreatedAt(created_at);
-        // service.setCancelled();
-        // service.setCompleted();
+        if (ParametersUtils.has(request, "costumer")) {
+            Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
+            final Long costumer_id = ParametersUtils.asLong(request, "costumer");
+            Costumer costumer = CostumerDAO.findById(db, costumer_id);
+            if (costumer != null) {
+                s.setCostumer(costumer);
+            }
+        }
 
+        double value = calculateValue(s);
+        s.setValue(value);
+
+        return s;
+    }
+
+    private static double calculateValue(final Service service) {
         double value = 0.0;
         value += service.getInstallations() * 100;
         value += service.getRemoval() * 75;
@@ -361,10 +210,7 @@ public class ServicesServlet extends HttpServlet {
             value += 200;
         }
         value += service.getTubeLength() * Service.COPPER_TUBE_PRICE_BY_LENGTH;
-
-        service.setValue(value);
-
-        return service;
+        return value;
     }
 
 }

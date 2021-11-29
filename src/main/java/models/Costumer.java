@@ -1,8 +1,8 @@
 package models;
 
-import database.CostumerDAO;
-
 public class Costumer {
+
+    private Long id;
 
     // info
     private String cpf;
@@ -20,6 +20,14 @@ public class Costumer {
     private String city;
     private String state;
     private String country;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getCpf() {
         return cpf;
@@ -126,6 +134,7 @@ public class Costumer {
     }
 
     public Costumer merge(final Costumer c) {
+        //this.setId(c.getId());
         this.setCpf(c.getCpf());
         this.setName(c.getName());
         this.setPhone(c.getPhone());

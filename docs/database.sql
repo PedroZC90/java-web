@@ -2,7 +2,8 @@ DROP DATABASE IF EXISTS "java-web";
 CREATE DATABASE "java-web";
 
 CREATE TABLE IF NOT EXISTS costumers (
-    cpf character varying (14) PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
+    cpf character varying (14),
     name character varying (255),
     phone character varying (16),
     email character varying (255),
@@ -14,13 +15,14 @@ CREATE TABLE IF NOT EXISTS costumers (
     district character varying (255),
     city character varying (255),
     state character varying (255),
-    country character varying (255)
+    country character varying (255),
+    CONSTRAINT costumers_cpf_ukey UNIQUE (cpf)
 );
 
 CREATE TABLE IF NOT EXISTS services (
     id BIGSERIAL PRIMARY KEY,
     created_at timestamp DEFAULT current_timestamp,
-    scheduling_date timestamp,
+    scheduled_to timestamp,
     cancelled boolean DEFAULT false,
     completed boolean DEFAULT false,
     installations integer DEFAULT 0,
@@ -28,7 +30,9 @@ CREATE TABLE IF NOT EXISTS services (
     rappel_required boolean DEFAULT false,
     removal integer DEFAULT 0,
     maintenance integer DEFAULT 0,
-    value numeric(12, 5) DEFAULT 0.0
+    value numeric(12, 5) DEFAULT 0.0,
+    costumer_id BIGSERIAL NOT NULL,
+    CONSTRAINT services_costumers_fkey FOREIGN KEY (costumer_id) REFERENCES costumers (id)
 );
 
 INSERT INTO public.costumers (cpf, name, phone, email, address, number, complement, reference, zip_code, district,
@@ -38,6 +42,7 @@ INSERT INTO public.costumers (cpf, name, phone, email, address, number, compleme
 ('000.000.000-03', 'costumer 3', '(48) 00000-0000', 'costumer_3@email.com', 'Rua C', '300', null, null, '00000-000', 'BAIRRO #3', 'CIDADE #3', 'ESTADO #3', 'BRASIL'),
 ('000.000.000-04', 'costumer 4', '(48) 00000-0000', 'costumer_4@email.com', 'Rua D', '400', null, null, '00000-000', 'BAIRRO #4', 'CIDADE #4', 'ESTADO #4', 'BRASIL');
 
-INSERT INTO public.services (created_at, scheduling_date, cancelled, completed, installations, tube_length,
-                             rappel_required, removal, maintenance, value) VALUES
-(localtimestamp, '2021-11-30 13:00:00.000', false, false, 1, 3.50000, false, 0, 0, 320.0000);
+INSERT INTO public.services (created_at, scheduled_to, cancelled, completed, installations, tube_length,
+                             rappel_required, removal, maintenance, value, costumer_id) VALUES
+(localtimestamp, '2021-12-23 13:00:00.000', false, false, 1, 3.50000, false, 0, 0, 320.0000, (SELECT c.id FROM costumers c ORDER BY c.id ASC LIMIT 1)),
+(localtimestamp, '2021-11-30 13:00:00.000', false, false, 1, 3.50000, false, 0, 0, 320.0000, (SELECT c.id FROM costumers c ORDER BY c.id ASC OFFSET 1 LIMIT 1));

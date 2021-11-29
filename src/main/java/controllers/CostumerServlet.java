@@ -22,20 +22,21 @@ public class CostumerServlet extends HttpServlet {
 
     @Override
     protected void doPost(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
-        final String cpf = ParametersUtils.asString(request,"cpf", AppUtils::addCpfMask);
-        if (StringUtils.isBlank(cpf)) {
-            response.setStatus(400);
-            return;
-        }
+        // final String cpf = ParametersUtils.asString(request,"cpf", AppUtils::addCpfMask);
+        final Long id = ParametersUtils.asLong(request,"id");
+        // if (id == null) {
+        //     response.setStatus(400);
+        //     return;
+        // }
 
         final HttpSession session = request.getSession();
         final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
 
-        Costumer costumer = CostumerDAO.findByCpf(db, cpf);
+        Costumer costumer = CostumerDAO.findById(db, id);
         if (costumer == null) {
             costumer = readForm(request);
-            boolean inserted = CostumerDAO.insert(db, costumer);
-            if (!inserted) {
+            costumer = CostumerDAO.insert(db, costumer);
+            if (costumer == null) {
                 response.setStatus(400);
                 return;
             }
@@ -48,7 +49,7 @@ public class CostumerServlet extends HttpServlet {
             }
         }
 
-        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/costumers", cpf);
+        final String absoluteUrl = AppUtils.url(AppUtils.getBaseUrl(request), "/costumers/index.jsp?id=" + costumer.getId());
         response.sendRedirect(absoluteUrl);
     }
 
@@ -60,18 +61,18 @@ public class CostumerServlet extends HttpServlet {
     private static Costumer readForm(final HttpServletRequest request) {
         Costumer costumer = new Costumer();
         costumer.setCpf(ParametersUtils.asString(request,"cpf", AppUtils::addCpfMask));
-        costumer.setName(ParametersUtils.asString(request, "nome"));
+        costumer.setName(ParametersUtils.asString(request, "name"));
         costumer.setPhone(ParametersUtils.asString(request, "phone"));
         costumer.setEmail(ParametersUtils.asString(request, "email"));
         costumer.setAddress(ParametersUtils.asString(request, "address"));
         costumer.setNumber(ParametersUtils.asString(request, "number"));
-        costumer.setComplement(ParametersUtils.asString(request, "complemento"));
-        costumer.setReference(ParametersUtils.asString(request, "referencia"));
-        costumer.setZipCode(ParametersUtils.asString(request, "cep"));
-        costumer.setDistrict(ParametersUtils.asString(request, "bairro"));
-        costumer.setCity(ParametersUtils.asString(request, "cidade"));
-        costumer.setState(ParametersUtils.asString(request, "estado"));
-        costumer.setCountry(ParametersUtils.asString(request, "pais"));
+        costumer.setComplement(ParametersUtils.asString(request, "complement"));
+        costumer.setReference(ParametersUtils.asString(request, "reference"));
+        costumer.setZipCode(ParametersUtils.asString(request, "zip_code"));
+        costumer.setDistrict(ParametersUtils.asString(request, "district"));
+        costumer.setCity(ParametersUtils.asString(request, "city"));
+        costumer.setState(ParametersUtils.asString(request, "state"));
+        costumer.setCountry(ParametersUtils.asString(request, "country"));
         return costumer;
     }
 

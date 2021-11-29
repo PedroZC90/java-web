@@ -6,8 +6,12 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="models.Service" %>
+<%@ page import="java.text.DateFormat" %>
+<%@ page import="javax.swing.text.DateFormatter" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
+    final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     final String base_url = AppUtils.getBaseUrl(request);
 
     final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
@@ -46,7 +50,7 @@
                 <div class="list-grid">
                     <%
                         for (Costumer c : cotumers) {
-                            String path = String.format("%s/costumers/index.jsp?cpf=%s", base_url, c.getCpf());
+                            String path = String.format("%s/costumers/index.jsp?id=%d", base_url, c.getId());
                             StringBuilder sb = new StringBuilder();
                             if (StringUtils.isNotBlank(c.getAddress())) sb.append(c.getAddress());
                             if (sb.length() > 0) sb.append(", ");
@@ -77,8 +81,12 @@
                 <div class="list-grid">
                     <%
                         for (Service s : services) {
-                            out.println("<a class='list-box' href='" + base_url + "/services/index.jsp?id=" + s.getId() + "'>");
-                            out.println("<p>Service #" + s.getId() + "</p>");
+                            String css = "";
+                            if (s.isCancelled()) css = " cancelled";
+                            if (s.isCompleted()) css = " completed";
+                            out.println("<a class='list-box" + css +"' href='" + base_url + "/services/index.jsp?id=" + s.getId() + "'>");
+                            out.println("<p>#" + s.getId() + "</p>");
+                            out.println("<p> Agendamento: " + s.getScheduledTo().format(FORMAT) + "</p>");
                             out.println("</a>");
                         }
                     %>

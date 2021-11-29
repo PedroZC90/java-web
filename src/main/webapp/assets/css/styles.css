@@ -128,6 +128,20 @@ ul[id='menu'] {
     margin: 4px;
 }
 
+#dashboard #services .list-box {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(2, 1fr);
+}
+
+#dashboard #services .list-box p:first-child {
+    text-align: start;
+}
+
+#dashboard #services .list-box p:last-child {
+    text-align: end;
+}
+
 /* COSTUMER PAGE */
 #costumer-page .form-panel {
     background: white;

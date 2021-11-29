@@ -43,13 +43,13 @@
         <div class="centralized">
             <div class="form-panel">
                 <h1 class="form-header">Service</h1>
-                <form class="form-content" action="<%= base_url %>/servlet/services" method="POST">
+                <form class="form-content" action="<%= base_url %>/servlet/services<%= ((serviceId != null) ? ("/" + serviceId) : "") %>" method="POST">
                     <div class="box">
                         <label for="constumer">Cliente</label>
                         <select id="constumer" name="constumer">
                             <%
                                 for (Costumer c : cotumers) {
-                                    out.println("<option value='" + c.getCpf() + "'>" + c.getName() + "</option>");
+                                    out.println("<option value='" + c.getId() + "'>" + c.getName() + "</option>");
                                 }
                             %>
                         </select>
@@ -75,9 +75,9 @@
                         <input id="rappel" name="rappel" type="checkbox" value="<%= service.isRappelRequired() %>">
                     </div>
                     <div class="box">
-                        <label for="scheduler">Agendamento</label>
+                        <label for="scheduled_to">Agendamento</label>
                         <%--"yyyy-MM-ddThh:mm" + ":ss" or ":ss.SSS"--%>
-                        <input id="scheduler" name="scheduler" type="datetime-local" step="1" value="<%= ((service.getSchedulingDate() != null) ? service.getSchedulingDate() : LocalDateTime.now()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) %>">
+                        <input id="scheduled_to" name="scheduled_to" type="datetime-local" step="1" value="<%= ((service.getScheduledTo() != null) ? service.getScheduledTo() : LocalDateTime.now()).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) %>">
                     </div>
                     <div class="box">
                         <label for="cost">Valor</label>
@@ -89,10 +89,10 @@
                     <%
                         if (service.getId() != null) {
                             out.println("<div class='box'>");
-                            out.println("<button name='action' value='complete' type='submit'>Completar</button>");
+                            out.println("<button name='action' diabled=" + (!service.isCompleted()) + " value='complete' type='submit'>Completar</button>");
                             out.println("</div>");
                             out.println("<div class='box'>");
-                            out.println("<button name='action' value='cancel' type='submit'>Cancelar</button >");
+                            out.println("<button name='action' disabled=" + (!service.isCancelled()) + " value='cancel' type='submit'>Cancelar</button >");
                             out.println("</div>");
                         }
                     %>

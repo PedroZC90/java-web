@@ -8,7 +8,7 @@ public class Service {
 
     private Long id;
     private LocalDateTime createdAt;
-    private LocalDateTime schedulingDate = LocalDateTime.now();
+    private LocalDateTime scheduled_to = LocalDateTime.now();
     private boolean cancelled;
     private boolean completed;
 
@@ -26,7 +26,8 @@ public class Service {
     private Double value = 0.0;
 
     // costumer
-    private String costumerCpf;
+    private Long costumer_id;
+    private Costumer costumer;
 
     public Long getId() {
         return id;
@@ -44,12 +45,12 @@ public class Service {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getSchedulingDate() {
-        return schedulingDate;
+    public LocalDateTime getScheduledTo() {
+        return scheduled_to;
     }
 
-    public void setSchedulingDate(LocalDateTime schedulingDate) {
-        this.schedulingDate = schedulingDate;
+    public void setScheduledTo(LocalDateTime scheduled_to) {
+        this.scheduled_to = scheduled_to;
     }
 
     public boolean isCancelled() {
@@ -116,12 +117,26 @@ public class Service {
         this.value = value;
     }
 
-    public String getCostumerCpf() {
-        return costumerCpf;
+    public Long getCostumerId() {
+        if (costumer_id == null) {
+            return (costumer != null) ? costumer.getId() : null;
+        }
+        return costumer_id;
     }
 
-    public void setCostumerCpf(String costumerCpf) {
-        this.costumerCpf = costumerCpf;
+    public void setCostumerId(Long costumer_id) {
+        this.costumer_id = costumer_id;
+    }
+
+    public Costumer getCostumer() {
+        return costumer;
+    }
+
+    public void setCostumer(Costumer costumer) {
+        this.costumer = costumer;
+        if (costumer != null) {
+            this.costumer_id = costumer.getId();
+        }
     }
 
 }

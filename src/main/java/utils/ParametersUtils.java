@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.function.Function;
 
 public class ParametersUtils {
@@ -45,6 +46,15 @@ public class ParametersUtils {
 
     public static String asString(final HttpServletRequest request, final String key, final Function<String, String> transform) {
         return transform.apply(asString(request, key));
+    }
+
+    public static boolean has(final HttpServletRequest request, final String key) {
+        if (request == null || key == null) return false;
+        return has(request.getParameterMap(), key);
+    }
+
+    public static boolean has(final Map<String, String[]> map, final String key) {
+        return (map != null && map.containsKey(key));
     }
 
 }
