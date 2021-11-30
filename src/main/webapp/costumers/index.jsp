@@ -90,8 +90,15 @@
                         <input id="country" name="country" type="text" value="<%= (StringUtils.isNotBlank(costumer.getCountry())) ? costumer.getCountry() : "" %>">
                     </div>
                     <div class="box">
-                        <button type="submit">Salvar</button>
+                        <button value="save" type="submit">Salvar</button>
                     </div>
+                    <%
+                        if (costumer.getId() != null) {
+                            out.println("<div class='box'>");
+                            out.println("<button name='action' value='remove' type='submit'>Remover</button>");
+                            out.println("</div>");
+                        }
+                    %>
                 </form>
             </div>
         </div>
