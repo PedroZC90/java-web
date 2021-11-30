@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.Function;
@@ -15,6 +16,16 @@ public class ParametersUtils {
             String s = asString(request, key);
             if (StringUtils.isBlank(s)) return null;
             return LocalDateTime.parse(s);
+        } catch (DateTimeException e) {
+            return null;
+        }
+    }
+
+    public static LocalDate asLocalDate(final HttpServletRequest request, final String key) {
+        try {
+            String s = asString(request, key);
+            if (StringUtils.isBlank(s)) return null;
+            return LocalDate.parse(s);
         } catch (DateTimeException e) {
             return null;
         }

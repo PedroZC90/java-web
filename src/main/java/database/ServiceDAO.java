@@ -3,6 +3,7 @@ package database;
 import models.Service;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,26 +35,54 @@ public class ServiceDAO {
         return s;
     }
 
-    public static List<Service> select(final Connection db, final Integer page, final Integer rpp) {
+    public static List<Service> select(final Connection db, final Integer page, final Integer rpp,
+                                       final LocalDate from, final LocalDate to,
+                                       final Long costumerId) {
         final List<Service> list = new ArrayList<>();
         try {
-            final String query = "SELECT s.*, c.* FROM public.services s " +
-                    "LEFT JOIN costumers c ON c.id = s.costumer_id " +
-                    "ORDER BY s.cancelled ASC, " +
-                    "s.completed ASC, " +
-                    "s.scheduled_to ASC " +
-                    "OFFSET ? " +
-                    "LIMIT ?";
-            PreparedStatement st = db.prepareStatement(query);
-            st.setInt(1, rpp * (page - 1));
-            st.setInt(2, rpp);
+            final StringBuilder query = new StringBuilder("SELECT s.*, c.* FROM public.services s ")
+                    .append("LEFT JOIN costumers c ON c.id = s.costumer_id ")
+                    .append("WHERE s.cancelled = false ");
 
-            ResultSet rs = st.executeQuery();
+            if (from != null || to != null) {
+                query.append("AND ");
+                if (from != null) {
+                    query.append("date(s.scheduled_to) >= ? ");
+                }
+                if (to != null) {
+                    if (from != null) query.append("AND ");
+                    query.append("date(s.scheduled_to) <= ? ");
+                }
+            }
+
+            if (costumerId != null) {
+                query.append(" s.costumer_id = ? ");
+            }
+
+            query.append("ORDER BY s.cancelled ASC, ")
+                    .append("s.completed ASC, ")
+                    .append("s.scheduled_to ASC ");
+
+            if (page != null && rpp != null) {
+                query.append("OFFSET ? ").append("LIMIT ?");
+            }
+
+            int index = 1;
+            PreparedStatement ps = db.prepareStatement(query.toString());
+            if (from != null) ps.setObject(index++, from);
+            if (to != null) ps.setObject(index++, to);
+            if (costumerId != null) ps.setLong(index++, costumerId);
+            if (page != null && rpp != null) {
+                ps.setInt(index++, rpp * (page - 1));
+                ps.setInt(index, rpp);
+            }
+
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Service s = build(rs);
                 list.add(s);
             }
-            st.close();
+            ps.close();
         } catch (SQLException e) {
             log.severe(String.format("SQLError (%d): %s", e.getErrorCode(), e.getMessage()));
         }

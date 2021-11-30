@@ -142,6 +142,22 @@ ul[id='menu'] {
     text-align: end;
 }
 
+#dashboard #services .list-filter {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: repeat(2, 1fr) 75px;
+}
+
+#dashboard #services .list-filter .box {
+    display: grid;
+    gap: var(--spacing-md);
+    grid-template-columns: 30% auto;
+}
+
+#dashboard #services .list-filter .box label {
+    text-align: end;
+}
+
 /* COSTUMER PAGE */
 #costumer-page .form-panel {
     background: white;

@@ -9,10 +9,15 @@
 <%@ page import="java.text.DateFormat" %>
 <%@ page import="javax.swing.text.DateFormatter" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
+<%@ page import="java.time.LocalDate" %>
+<%@ page import="utils.ParametersUtils" %>
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%
     final DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     final String base_url = AppUtils.getBaseUrl(request);
+
+    final LocalDate from = ParametersUtils.asLocalDate(request, "from");
+    final LocalDate to = ParametersUtils.asLocalDate(request, "to");
 
     final Connection db = (Connection) request.getServletContext().getAttribute(AppUtils.CONNECTION_KEY);
 
@@ -20,7 +25,7 @@
     final int numberOfServices = ServiceDAO.count(db);
 
     final List<Costumer> cotumers = CostumerDAO.select(db, 1, 15);
-    final List<Service> services = ServiceDAO.select(db, 1, 15);
+    final List<Service> services = ServiceDAO.select(db, 1, 15, from, to);
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -78,6 +83,17 @@
                     <h2>Serviços</h2>
                     <h2><%= numberOfServices %></h2>
                 </div>
+                <form class="list-filter" action="<%= base_url %>/dashboard/index.jsp" method="GET">
+                    <div class="box">
+                        <label for="from">Data Inicial</label>
+                        <input id="from" name="from" type="date" value="<%= from %>" />
+                    </div>
+                    <div class="box">
+                        <label for="to">Data Final</label>
+                        <input id="to" name="to" type="date" value="<%= to %>" />
+                    </div>
+                    <button type="submit">Filtrar</button>
+                </form>
                 <div class="list-grid">
                     <%
                         for (Service s : services) {
