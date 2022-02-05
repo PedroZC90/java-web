@@ -56,7 +56,7 @@ public class ServiceDAO {
             }
 
             if (costumerId != null) {
-                query.append(" s.costumer_id = ? ");
+                query.append("AND s.costumer_id = ? ");
             }
 
             query.append("ORDER BY s.cancelled ASC, ")

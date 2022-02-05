@@ -184,7 +184,7 @@ public class CostumerDAO {
 
     public static boolean deleteById(final Connection db, final Long id) {
         try {
-            final String query = "DELETE FROM public.constumers WHERE id = ?";
+            final String query = "DELETE FROM public.costumers WHERE id = ?";
             PreparedStatement st = db.prepareStatement(query);
             st.setLong(1, id);
             boolean result = st.execute();

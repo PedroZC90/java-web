@@ -6,8 +6,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="models.Service" %>
-<%@ page import="java.text.DateFormat" %>
-<%@ page import="javax.swing.text.DateFormatter" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="utils.ParametersUtils" %>
@@ -25,7 +23,7 @@
     final int numberOfServices = ServiceDAO.count(db);
 
     final List<Costumer> cotumers = CostumerDAO.select(db, 1, 15);
-    final List<Service> services = ServiceDAO.select(db, 1, 15, from, to);
+    final List<Service> services = ServiceDAO.select(db, 1, 15, from, to, null);
 %>
 <!DOCTYPE html>
 <html lang="en">
@@ -102,7 +100,7 @@
                             if (s.isCompleted()) css = " completed";
                             out.println("<a class='list-box" + css +"' href='" + base_url + "/services/index.jsp?id=" + s.getId() + "'>");
                             out.println("<p>#" + s.getId() + "</p>");
-                            out.println("<p> Agendamento: " + s.getScheduledTo().format(FORMAT) + "</p>");
+                            out.println("<p>Agendamento: " + s.getScheduledTo().format(FORMAT) + "</p>");
                             out.println("</a>");
                         }
                     %>
